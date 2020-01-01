@@ -37,10 +37,13 @@ class TimeManager():
                 print('Run complete.')
 
     def _begin_timer(self):
-        if datetime.now() > self._start_time:
+        current_datetime = datetime.now()
+        if current_datetime > self._start_time:
             self._sched.enter(0, 1, self._queue_capture)
             self._sched.run()
         else:
-            time.sleep(0.5)
+            diff = self._start_time - current_datetime
+            print(diff.total_seconds())
+            time.sleep(diff.total_seconds())
             self._begin_timer()
 

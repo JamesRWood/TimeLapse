@@ -30,8 +30,9 @@ class CameraProcess(mp.Process):
             while cont:
                 message = self._messageQueue.get()
 
-                if isinstance(message, CaptureMessage):                    
-                    self._camera.capture(os.path.join(image_folder_path, 'Img_' + self._get_timeStamp()))
+                if isinstance(message, CaptureMessage):
+                    image_path = os.path.join(image_folder_path, 'Img_' + self._get_timeStamp()) + '.jpg'
+                    self._camera.capture(image_path)
 
                 if run_once:
                     cont = False
@@ -43,4 +44,4 @@ class CameraProcess(mp.Process):
 
     def _get_timeStamp(self) -> str:
         currentTime = datetime.now()
-        return currentTime.strftime('%d-%m-%Y_%H:%M:%S:%f')
+        return currentTime.strftime('%d-%m-%Y_%H%M%S')
