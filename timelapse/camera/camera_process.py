@@ -4,19 +4,17 @@ import os
 from multiprocessing import JoinableQueue
 from typing import Type
 from datetime import datetime
-from logging import Logger
 
 from timelapse.config.config_manager import ConfigManager
-from timelapse.messages import CaptureMessage
+from timelapse.messages import CaptureMessage, RunCompleteMessage
 from timelapse.rpi.picamera_proxy import PiCameraProxy
 
 class CameraProcess(mp.Process):
-    def __init__(self, logger: Type[Logger], config: Type[ConfigManager], messageQueue: Type[JoinableQueue]):
+    def __init__(self, config: Type[ConfigManager], messageQueue: Type[JoinableQueue]):
         super().__init__()
         self._messageQueue = messageQueue
-        self._logger = logger
         self._config = config
-        self._camera = PiCameraProxy()
+        self._camera = PiCameraProxy(config)
 
     def run(self, run_once=False):
         image_folder_path = self._config.get('run', 'image_folder')
@@ -34,13 +32,14 @@ class CameraProcess(mp.Process):
                     image_path = os.path.join(image_folder_path, 'Img_' + self._get_timeStamp()) + '.jpg'
                     self._camera.capture(image_path)
 
+                if isinstance(message, RunCompleteMessage):
+                    self._camera.dispose()
+
                 if run_once:
                     cont = False
             return
         except KeyboardInterrupt:
             return
-        except:
-            self._logger.exception('Exception occurred', exc_info=True)
 
     def _get_timeStamp(self) -> str:
         currentTime = datetime.now()

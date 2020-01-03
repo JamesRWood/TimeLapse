@@ -8,3 +8,6 @@ class CaptureMessage():
 
     def CaptureMode(self) -> CaptureMode:
         return self._capture_mode
+
+class RunCompleteMessage():
+    pass
