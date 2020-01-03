@@ -5,6 +5,7 @@ from multiprocessing import JoinableQueue
 from typing import Type
 from datetime import datetime
 
+from timelapse.log_manager import LogManager
 from timelapse.config.config_manager import ConfigManager
 from timelapse.messages import CaptureMessage, RunCompleteMessage
 from timelapse.rpi.picamera_proxy import PiCameraProxy
@@ -12,6 +13,7 @@ from timelapse.rpi.picamera_proxy import PiCameraProxy
 class CameraProcess(mp.Process):
     def __init__(self, config: Type[ConfigManager], messageQueue: Type[JoinableQueue]):
         super().__init__()
+
         self._messageQueue = messageQueue
         self._config = config
         self._camera = PiCameraProxy(config)

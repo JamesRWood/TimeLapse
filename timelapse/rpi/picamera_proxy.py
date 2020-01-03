@@ -5,15 +5,15 @@ try:
 except:
     _picamera_loaded = False
 
-import time, logging
+import time
 
 from typing import Type
 
+from timelapse.log_manager import LogManager
 from timelapse.config.config_manager import ConfigManager
 
 class PiCameraProxy():
     def __init__(self, config: Type[ConfigManager]):
-        self._logger = logging.getLogger('__main__')
         self._camera_initialised = False
         if _picamera_loaded:
             self._camera = PiCamera(resolution=(config.getInt('camera', 'resolution_width'), config.getInt('camera', 'resolution_height')), framerate=config.getInt('camera', 'framerate'))
@@ -33,7 +33,7 @@ class PiCameraProxy():
             else:
                 time.sleep(0.5)
                 self.capture(filename)
-        self._logger.info(filename)
+        LogManager.log_info(__name__, 'Capture: ' + filename)
 
     def dispose(self):
         if _picamera_loaded and self._camera_initialised:

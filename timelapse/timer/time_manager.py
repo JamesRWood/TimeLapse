@@ -1,21 +1,16 @@
-import time, sched, decimal, logging
-# import logging.config
-# from os import path
+import time, sched, decimal
 
 from multiprocessing import JoinableQueue
 from typing import Type
 from datetime import datetime
 
+from timelapse.log_manager import LogManager
 from timelapse.config.config_manager import ConfigManager
 from timelapse.messages import CaptureMessage, RunCompleteMessage
 from timelapse.camera.capture_mode import CaptureMode
 
 class TimeManager():
-    def __init__(self, config: Type[ConfigManager], messageQueue: Type[JoinableQueue]):
-        # log_file_path = path.join(path.dirname(path.abspath(__file__)), 'log.conf')
-        # logging.config.fileConfig(log_file_path, defaults={'logfilename': 'timelapse.log'}, disable_existing_loggers=False)
-        self._logger = logging.getLogger(__name__)
-        # self._logger.info("Hmm")
+    def __init__(self, config: Type[ConfigManager], messageQueue: Type[JoinableQueue]):        
         self._config = config
         self._messageQueue = messageQueue
         self._sched = sched.scheduler(time.time, time.sleep)
@@ -27,8 +22,8 @@ class TimeManager():
 
     def run(self):
         if self._debugMode:
-            self._logger.info('Start time scheduled: ' + self._start_time.strftime(self._time_format))
-            self._logger.info('End time scheduled: ' + self._end_time.strftime(self._time_format))
+            LogManager.log_info(__name__, 'Start time scheduled: ' + self._start_time.strftime(self._time_format))
+            LogManager.log_info(__name__, 'End time scheduled: ' + self._end_time.strftime(self._time_format))
 
         self._begin_timer()        
 
@@ -38,7 +33,7 @@ class TimeManager():
             self._sched.enter(self._interval, 1, self._queue_capture)
         else:
             self._messageQueue.put(RunCompleteMessage())
-            self._logger.info('Run complete.')
+            LogManager.log_info(__name__, 'Run complete.')
 
     def _begin_timer(self):
         current_datetime = datetime.now()
@@ -48,7 +43,8 @@ class TimeManager():
         else:            
             diff = self._start_time - current_datetime
             diff_seconds = diff.total_seconds()
-            self._logger.info('%s: %.2fs' % ('Time until scheduled start', diff_seconds))
+            LogManager.log_info(__name__, '%s: %.2fs' % ('Time until scheduled start', diff_seconds))
             time.sleep(diff_seconds)
             self._begin_timer()
+
 
