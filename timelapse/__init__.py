@@ -1,5 +1,5 @@
 import sys
-from .main import main
+from .main import Main
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv))
+    sys.exit(Main().main(sys.argv))

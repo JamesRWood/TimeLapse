@@ -1,4 +1,4 @@
 import sys
 import timelapse
 
-sys.exit(timelapse.main(sys.argv))
+sys.exit(timelapse.Main().main(sys.argv))
