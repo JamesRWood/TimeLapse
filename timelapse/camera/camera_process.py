@@ -24,11 +24,10 @@ class CameraProcess(Process):
 
     def run(self):
         run = True
+        cam = self._get_cam()
+        stream = io.BytesIO()
         while run:
-            cam = self._get_cam()
-
             message = self._timer_c_pipe.recv()
-            stream = io.BytesIO()
 
             if isinstance(message, CaptureMessage):
                 try:
