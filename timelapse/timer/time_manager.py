@@ -24,6 +24,7 @@ class TimeManager():
             LogManager.log_info(__name__, 'End time scheduled: ' + self._end_time.strftime(self._time_format))
 
         self._begin_timer()
+        return
 
     def _queue_capture(self):
         if datetime.now() < self._end_time:
@@ -33,6 +34,7 @@ class TimeManager():
             LogManager.log_info(__name__, 'Run complete.')
             self._timer_p_pipe.send(KillProcessMessage())
             self._timer_p_pipe.close()
+        return
 
     def _begin_timer(self):
         current_datetime = datetime.now()

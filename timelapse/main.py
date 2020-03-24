@@ -32,8 +32,8 @@ class Main(object):
                 current_time = datetime.now()
                 LogManager.log_info(__name__, 'Running in DEBUG mode')
                 ConfigManager.set('run', 'debug_mode', 'True')
-                ConfigManager.set('run', 'start', (current_time + timedelta(seconds=15)).strftime('%d/%m/%Y_%H:%M:%S'))
-                ConfigManager.set('run', 'end', (current_time + timedelta(minutes=2, seconds=15)).strftime('%d/%m/%Y_%H:%M:%S'))
+                ConfigManager.set('run', 'start', (current_time + timedelta(seconds=5)).strftime('%d/%m/%Y_%H:%M:%S'))
+                ConfigManager.set('run', 'end', (current_time + timedelta(minutes=1, seconds=5)).strftime('%d/%m/%Y_%H:%M:%S'))
 
             timer_p_pipe, timer_c_pipe = Pipe()
             img_p_pipe, img_c_pipe = Pipe()

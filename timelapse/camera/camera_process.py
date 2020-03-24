@@ -23,18 +23,17 @@ class CameraProcess(Process):
         self.caller = caller
 
     def run(self):
-        run = True
+        run = True        
+        cam = self._get_cam()
+        stream = picamera.array.PiRGBArray(cam)
+
         while run:
-            cam = self._get_cam()
-
             message = self._timer_c_pipe.recv()
-            stream = io.BytesIO()
-
-            if isinstance(message, CaptureMessage):
+            
+            if isinstance(message, CaptureMessage):                
                 try:
-                    cam.capture(stream, format='jpeg', quality=95)
-                    # cam.capture(stream, format='png')
-                    self._img_p_pipe.send(ProcessImageMessage(stream))
+                    cam.capture(stream, format='rgb')
+                    self._img_p_pipe.send(ProcessImageMessage(stream.array))                    
                     stream.seek(0)
                     stream.truncate()
                 except Exception as e:
@@ -53,7 +52,9 @@ class CameraProcess(Process):
         if _picamera_loaded:
             resolution = (ConfigManager.getInt('camera', 'resolution_width'), ConfigManager.getInt('camera', 'resolution_height'))
             framerate = ConfigManager.getInt('camera', 'framerate')
+            rotation = ConfigManager.getInt('camera', 'rotation')
             cam =  PiCamera(resolution=resolution, framerate=framerate)
+            cam.rotation = rotation
             time.sleep(2)   # Allow PiCamera necessary time to auto-adjust settings
             return cam
         else:
