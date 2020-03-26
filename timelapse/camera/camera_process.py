@@ -25,15 +25,15 @@ class CameraProcess(Process):
     def run(self):
         run = True        
         cam = self._get_cam()
-        stream = picamera.array.PiRGBArray(cam)
+        stream = io.BytesIO()
 
         while run:
             message = self._timer_c_pipe.recv()
             
             if isinstance(message, CaptureMessage):                
                 try:
-                    cam.capture(stream, format='rgb')
-                    self._img_p_pipe.send(ProcessImageMessage(stream.array))                    
+                    cam.capture(stream, format='jpeg', quality=95)
+                    self._img_p_pipe.send(ProcessImageMessage(stream))                    
                     stream.seek(0)
                     stream.truncate()
                 except Exception as e:

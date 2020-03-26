@@ -44,11 +44,14 @@ class Main(object):
 
             procs = [timer_process, camera_process, image_processor]
 
-            for proc in procs:
-                proc.start()
+            try:
+                for proc in procs:
+                    proc.start()
 
-            for proc in procs:
-                proc.join()
+                for proc in procs:
+                    proc.join()
+            except Exception as e:
+                LogManager.log_error(__name__, f'{e}')
 
             self.run_complete.wait()
 
@@ -58,6 +61,9 @@ class Main(object):
             for proc in procs:
                 proc.terminate()
                 LogManager.log_info(__name__, f'Process terminated: {proc.name}')
+
+        except Exception as e:
+            LogManager.log_error(__name__, f'{e}')
 
         except KeyboardInterrupt:
             LogManager.log_info(__name__, 'Keyboard interrupt occurred, closing application')

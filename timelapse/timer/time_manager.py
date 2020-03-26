@@ -28,8 +28,13 @@ class TimeManager():
 
     def _queue_capture(self):
         if datetime.now() < self._end_time:
-            self._timer_p_pipe.send(CaptureMessage())
-            self._sched.enter(self._interval, 1, self._queue_capture)
+
+            if not self._timer_p_pipe.poll():
+                self._timer_p_pipe.send(CaptureMessage())
+                self._sched.enter(self._interval, 1, self._queue_capture)
+            else:
+                time.sleep(0.2)
+                self._queue_capture()            
         else:
             LogManager.log_info(__name__, 'Run complete.')
             self._timer_p_pipe.send(KillProcessMessage())

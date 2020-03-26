@@ -53,16 +53,18 @@ class ImageProcessor(Process):
 
                     ## ---------------JPEG shoot mode---------------
                     ## Interval must be >= 2s
-                    # rawIO = message._image_stream
-                    # rawIO.seek(0)
-                    # img = Image.open(rawIO)
+                    rawIO = message._image_stream
+                    rawIO.seek(0)
+                    img = Image.open(rawIO)
+                    img.save(image_path, 'JPEG', quality=95)
+                    ## ---------------------------------------------
+
+                    ## ---------------RGB shoot mode---------------
+                    # img = Image.frombytes('RGB', self._resolution, message._image_stream)
                     # img.save(image_path, 'JPEG', quality=95)
                     ## ---------------------------------------------
 
-                    img = Image.frombytes('RGB', self._resolution, message._image_stream)
-                    img.save(image_path, 'JPEG', quality=95)
-
-                LogManager.log_info(__name__, 'Processed: ' + image_path)
+                LogManager.log_debug(__name__, 'Processed: ' + image_path)
 
             elif isinstance(message, KillProcessMessage):
                 LogManager.log_info(__name__, 'ImageProcess closing')
