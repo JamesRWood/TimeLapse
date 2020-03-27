@@ -44,14 +44,16 @@ class CameraProcess(Process):
             
             if isinstance(message, CaptureMessage):                
                 try:
-                    cam.capture(stream, format='jpeg', quality=95)
-                    stream.seek(0)
+                    cam.capture(stream, format='jpeg', quality=95)                   
 
                     image_path = os.path.join(image_folder_path, 'Img_' + self._get_timeStamp()) + '.jpg'
                     if _pilLoaded and _picamera_loaded:
-                        img = Image.open(stream)                        
+                        rawIO = stream
+                        rawIO.seek(0)
+                        img = Image.open(rawIO)                        
                         img.save(image_path, 'JPEG', quality=95)
 
+                    stream.seek(0)
                     stream.truncate()
                     LogManager.log_debug(__name__, 'Processed: ' + image_path)                    
 
