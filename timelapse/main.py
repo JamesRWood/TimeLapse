@@ -12,7 +12,6 @@ from timelapse.log_manager import LogManager
 from timelapse.config_manager import ConfigManager
 from timelapse.timer.timer_process import TimerProcess
 from timelapse.camera.camera_process import CameraProcess
-from timelapse.camera.image_processor import ImageProcessor
 
 class Main(object):
     def __init__(self):
@@ -35,14 +34,12 @@ class Main(object):
                 ConfigManager.set('run', 'start', (current_time + timedelta(seconds=5)).strftime('%d/%m/%Y_%H:%M:%S'))
                 ConfigManager.set('run', 'end', (current_time + timedelta(minutes=1, seconds=5)).strftime('%d/%m/%Y_%H:%M:%S'))
 
-            timer_p_pipe, timer_c_pipe = Pipe()
-            img_p_pipe, img_c_pipe = Pipe()
+            timer_queue = mp.JoinableQueue()
 
-            timer_process = TimerProcess(timer_p_pipe, self)
-            camera_process = CameraProcess(timer_c_pipe, img_p_pipe, self)
-            image_processor = ImageProcessor(img_c_pipe, self)
+            timer_process = TimerProcess(timer_queue, self)
+            camera_process = CameraProcess(timer_queue, self)
 
-            procs = [timer_process, camera_process, image_processor]
+            procs = [timer_process, camera_process]
 
             try:
                 for proc in procs:
@@ -58,21 +55,15 @@ class Main(object):
             # Allow processes to dispose of resources prior to termination
             time.sleep(2)
 
-            for proc in procs:
-                proc.terminate()
-                LogManager.log_info(__name__, f'Process terminated: {proc.name}')
-
         except Exception as e:
             LogManager.log_error(__name__, f'{e}')
 
         except KeyboardInterrupt:
             LogManager.log_info(__name__, 'Keyboard interrupt occurred, closing application')
 
-            for proc in procs:
-                proc.terminate()
-                LogManager.log_info(__name__, f'Process terminated: {proc.name}')
+        self._terminate_processes(procs)
 
-        except:
-            for proc in procs:
-                proc.terminate()
-                LogManager.log_info(__name__, f'Process terminated: {proc.name}')
+    def _terminate_processes(self, processes):
+        for proc in processes:
+            proc.terminate()
+            LogManager.log_info(__name__, f'Process terminated: {proc.name}')

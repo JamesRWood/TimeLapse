@@ -1,25 +1,31 @@
-import time, io
+import time, io, os
 
 _picamera_loaded = True
+_pilLoaded = True
 
 try:
     import picamera.array
     from picamera import PiCamera
 except:
-    _picamera_loaded = False
+    _picamera_loaded = False    
 
-from multiprocessing import Process, Event
+try:
+    from PIL import Image
+except:
+    _pilLoaded = False
+
+from multiprocessing import Process, Event, JoinableQueue
 from typing import Type
+from datetime import datetime
 
 from timelapse.config_manager import ConfigManager
 from timelapse.messages import CaptureMessage, ProcessImageMessage, KillProcessMessage
 from timelapse.log_manager import LogManager
 
 class CameraProcess(Process):
-    def __init__(self, timer_c_pipe, img_p_pipe, caller):
+    def __init__(self, timer_queue: Type[JoinableQueue], caller):
         super(CameraProcess, self).__init__()
-        self._timer_c_pipe = timer_c_pipe
-        self._img_p_pipe = img_p_pipe        
+        self._timer_queue = timer_queue
         self.caller = caller
 
     def run(self):
@@ -27,24 +33,39 @@ class CameraProcess(Process):
         cam = self._get_cam()
         stream = io.BytesIO()
 
+        image_folder_path = ConfigManager.get('run', 'image_folder')
+        try:
+            os.stat(image_folder_path)
+        except:
+            os.mkdir(image_folder_path)
+
         while run:
-            message = self._timer_c_pipe.recv()
+            message = self._timer_queue.get()
             
             if isinstance(message, CaptureMessage):                
                 try:
                     cam.capture(stream, format='jpeg', quality=95)
-                    self._img_p_pipe.send(ProcessImageMessage(stream))                    
                     stream.seek(0)
+
+                    image_path = os.path.join(image_folder_path, 'Img_' + self._get_timeStamp()) + '.jpg'
+                    if _pilLoaded and _picamera_loaded:
+                        img = Image.open(stream)                        
+                        img.save(image_path, 'JPEG', quality=95)
+
                     stream.truncate()
+                    LogManager.log_debug(__name__, 'Processed: ' + image_path)                    
+
                 except Exception as e:
                     LogManager.log_error(__name__, f'{e}')
 
+                self._timer_queue.task_done()
+
             elif isinstance(message, KillProcessMessage):
                 LogManager.log_info(__name__, 'CameraProcess closing')
-                self._timer_c_pipe.close()
+                self._timer_queue.task_done()
+                self._timer_queue.close()
                 stream.close()
                 cam.close()
-                self._img_p_pipe.send(KillProcessMessage())
                 run = False            
         return
 
@@ -59,6 +80,10 @@ class CameraProcess(Process):
             return cam
         else:
             return DummyCam()
+
+    def _get_timeStamp(self) -> str:
+        currentTime = datetime.now()
+        return currentTime.strftime('%d-%m-%Y_%H%M%S')
 
 class DummyCam():
     def capture(self, stream, format, quality):

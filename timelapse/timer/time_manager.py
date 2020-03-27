@@ -9,8 +9,8 @@ from timelapse.config_manager import ConfigManager
 from timelapse.messages import CaptureMessage, KillProcessMessage
 
 class TimeManager():
-    def __init__(self, timer_p_pipe):
-        self._timer_p_pipe = timer_p_pipe
+    def __init__(self, timer_queue):
+        self._timer_queue = timer_queue
         self._sched = sched.scheduler(time.time, time.sleep)
         self._interval = ConfigManager.getInt('run', 'interval')
         self._time_format = '%d/%m/%Y_%H:%M:%S'
@@ -28,17 +28,15 @@ class TimeManager():
 
     def _queue_capture(self):
         if datetime.now() < self._end_time:
-
-            if not self._timer_p_pipe.poll():
-                self._timer_p_pipe.send(CaptureMessage())
+            if self._timer_queue.empty():
+                self._timer_queue.put(CaptureMessage())
                 self._sched.enter(self._interval, 1, self._queue_capture)
             else:
                 time.sleep(0.2)
-                self._queue_capture()            
+                self._queue_capture()
         else:
             LogManager.log_info(__name__, 'Run complete.')
-            self._timer_p_pipe.send(KillProcessMessage())
-            self._timer_p_pipe.close()
+            self._timer_queue.put(KillProcessMessage())
         return
 
     def _begin_timer(self):
