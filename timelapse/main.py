@@ -1,23 +1,20 @@
 import argparse
-import logging
 import time
 import multiprocessing as mp
-import logging.config
-from os import path
 from datetime import datetime, timedelta
 
-from multiprocessing import Pipe
-
 from timelapse.log_manager import LogManager
-from timelapse.config_manager import ConfigManager
 from timelapse.timer.timer_process import TimerProcess
 from timelapse.camera.camera_process import CameraProcess
+from timelapse.json_config_manager import JsonConfigManager
+
 
 class Main(object):
     def __init__(self):
         self.run_complete = mp.Event()
 
     def main(self, argv):
+        config = JsonConfigManager()
         arg_parser = argparse.ArgumentParser()
         arg_parser.add_argument('--debug', action='store_true', help='run in debug mode')
 
@@ -30,14 +27,16 @@ class Main(object):
             if parsed_args.debug:
                 current_time = datetime.now()
                 LogManager.log_info(__name__, 'Running in DEBUG mode')
-                ConfigManager.set('run', 'debug_mode', 'True')
-                ConfigManager.set('run', 'start', (current_time + timedelta(seconds=5)).strftime('%d/%m/%Y_%H:%M:%S'))
-                ConfigManager.set('run', 'end', (current_time + timedelta(minutes=1, seconds=5)).strftime('%d/%m/%Y_%H:%M:%S'))
+                config.run_configuration.debug_mode = True
+                config.run_configuration.schedules[0].start = (current_time + timedelta(seconds=5))
+                config.run_configuration.schedules[0].end = (current_time + timedelta(seconds=35))
+                config.run_configuration.schedules[1].start = (current_time + timedelta(minutes=1, seconds=5))
+                config.run_configuration.schedules[1].end = (current_time + timedelta(minutes=1, seconds=35))
 
             timer_queue = mp.JoinableQueue()
 
-            timer_process = TimerProcess(timer_queue, self)
-            camera_process = CameraProcess(timer_queue, self)
+            timer_process = TimerProcess(timer_queue, self, config)
+            camera_process = CameraProcess(timer_queue, self, config)
 
             procs = [timer_process, camera_process]
 

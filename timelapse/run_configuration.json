@@ -1,0 +1,23 @@
+{
+  "run_configuration": {
+    "debug_mode": "false",
+    "image_folder": "./Images/",
+    "interval": "2",
+    "schedules": [
+      {
+        "start": "17/10/2021_22:18:00",
+        "end": "17/10/2021_22:18:31"
+      },
+      {
+        "start": "17/10/2021_22:19:00",
+        "end": "17/10/2021_22:19:31"
+      }
+    ]
+  },
+  "camera_configuration": {
+    "resolution_width": "1664",
+    "resolution_height": "1232",
+    "framerate": "30",
+    "rotation": "270"
+  }
+}

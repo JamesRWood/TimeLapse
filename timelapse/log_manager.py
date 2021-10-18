@@ -1,5 +1,7 @@
-import os, logging
-from logging import Logger
+import logging
+import logging.config
+import os
+
 
 class LogManager(object):
     logging.config.fileConfig(os.path.join(os.path.dirname(__file__), 'log.cfg'), defaults={'logfilename': 'timelapse.log'}, disable_existing_loggers=False)
@@ -12,7 +14,7 @@ class LogManager(object):
         logger_instance.debug(message)
 
     @staticmethod
-    def log_info(name: str, message: str):        
+    def log_info(name: str, message: str):
         logger_instance = LogManager._get_logger(name)
         logger_instance.info(message)
 
